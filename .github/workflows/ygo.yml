@@ -1,0 +1,25 @@
+# Chaque semaine : images des nouvelles cartes Yu-Gi-Oh! (les images déjà présentes ne sont jamais retéléchargées).
+name: Images Yu-Gi-Oh!
+on:
+  schedule:
+    - cron: '30 4 * * 3'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  ygo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: node sync-ygo.mjs
+      - name: Publication
+        run: |
+          git add ygo
+          if git diff --cached --quiet; then echo "Aucune nouvelle image."; exit 0; fi
+          git -c user.name="hugohnh" -c user.email="hugohuynh01@gmail.com" commit -m "Images Yu-Gi-Oh! du $(date -u +%F)"
+          git push
